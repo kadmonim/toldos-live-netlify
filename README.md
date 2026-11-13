@@ -154,6 +154,30 @@ those descendants' husbands and wives. Nothing else is needed to decide who belo
 Pick the highest couple whose whole family you'd want on one site. Do it at the start: the app has
 no "add parents" button, on purpose, so the top is only ever changed in the database.
 
+## Bringing in what you already have
+
+You don't have to type the family in by hand. Whatever you already have, your AI coding tool can
+read it and prepare it for the tree:
+
+- **A GEDCOM file**: the standard export of family tree sites. On [Geni](https://www.geni.com),
+  MyHeritage, Ancestry or FamilySearch, look for "Export" or "Download GEDCOM".
+- **Spreadsheets**: a family directory, a list of birthdays, a contact list.
+- **PDFs and documents**: a printed family book, a simcha booklet, a scanned album.
+- **Photos**: a folder of pictures, named or not.
+
+Open your copy's folder in your AI tool, give it the files, and say something like:
+
+> Here's our family's GEDCOM file (and our birthday spreadsheet). Prepare it for importing into
+> this family tree under the top couple, show me what you'd add, and add it when I approve.
+
+It works out who is whose child and spouse, turns ordinary birthdays into Hebrew dates (tell it
+when someone was born after sunset), matches people who are already in the tree instead of adding
+them twice, and shows you everything before it changes anything. For photos, it can attach each
+picture to the right person, asking you about any it can't tell.
+
+Keep these files outside your copy's folder, or at least out of git: they hold your family's
+details, and the code repository is no place for them.
+
 ## More than one family
 
 Everyone has more than one family: your father's side, your mother's side, and once you're
