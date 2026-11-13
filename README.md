@@ -59,9 +59,18 @@ Netlify's own tool: `npx netlify dev`.
    build settings come from `netlify.toml`; nothing to fill in.
 3. **The database.** Netlify's own database (Netlify Database) is the simplest: it belongs to the
    site, and the files in `netlify/database/migrations/` (the tables, then the invented family)
-   are applied by Netlify on each deploy. To use your own Neon database instead, set
-   `TREE_DATABASE_URL` (step 4) to its connection string, and run those two files on it yourself,
-   in order (in Neon's SQL Editor, or with `psql`).
+   are applied by Netlify on each deploy.
+
+   **Or your own [Neon](https://neon.tech) database**, for more flexibility. It's a second free
+   account, but the database is then yours, apart from the site:
+   - Neon's console: a SQL editor, a full history to restore from (point-in-time), and branches
+     (a copy of the whole database to try something on).
+   - Your AI assistant or any database tool can connect to it directly.
+   - If you ever move the site to another host, the data stays where it is.
+
+   To use it, set `TREE_DATABASE_URL` (step 4) to its connection string, and run the files in
+   `netlify/database/migrations/` on it yourself, in order (in Neon's SQL Editor, or with
+   `psql`), now and whenever a new one is added.
 4. In **Project configuration → Environment variables**, add:
 
    | Variable | Value |
