@@ -28,7 +28,7 @@ features and the same demo. They differ only in where it runs and the kind of da
 | Database | D1: SQLite, Cloudflare's own | Postgres: Netlify's own database, or your own Neon |
 | Photos | R2 storage | Netlify Blobs |
 | Accounts needed | One (Cloudflare) | Netlify, plus Neon if you choose it |
-| Free plan | No logo on the site | A small Netlify logo on the site |
+| Cost | Free; [$5 a month](https://www.cloudflare.com/plans/developer-platform/) lifts the free limits, for a very big family | Free with a Netlify badge on the site; [$9 a month](https://www.netlify.com/pricing) (Personal) without it |
 | Looking at the data | Cloudflare's console and `wrangler` commands | Any Postgres tool; with Neon, its console, branches and point-in-time restore |
 | Changing the tables | Edit and run SQL by hand | Numbered migration files, applied by Netlify on each deploy |
 
@@ -97,7 +97,8 @@ Netlify's own tool: `npx netlify dev`.
 
 5. **Deploys → Trigger deploy.** The site is then live at its `….netlify.app` address.
 
-On Netlify's free plan the site shows a small Netlify logo; a paid plan doesn't. Your own address:
+On Netlify's free plan the site shows a Netlify badge; the Personal plan
+([$9 a month](https://www.netlify.com/pricing)) removes it. Your own address:
 add a domain under **Domain management**. Nothing in the code needs the address.
 
 ## Make it yours
