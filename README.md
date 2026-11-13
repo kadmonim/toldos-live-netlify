@@ -229,11 +229,21 @@ on in the database: `UPDATE people SET can_export = true WHERE id = '<person id>
 
 > Follow IMPORT.md in this zip to update my site's database.
 
-The zip's `IMPORT.md` tells it to go carefully. It backs up your database first, compares the
-export with your tree person by person, and writes an HTML page (`import-preview.html`) showing
-who would be added, which details would change, and for each change which side is newer (from
-when each part was last changed on each side). You check it, and nothing changes until you
-approve. Additions need a clear yes, by name. It never deletes anything.
+The zip's `IMPORT.md` tells it to go carefully. It backs up your database first, then compares
+the export with your tree, person by person and detail by detail:
+
+- **People you don't have yet**: a new baby, a new son-in-law. Offered as additions.
+- **Details filled in on one side only**: a birthday, a phone number, a city that the other tree
+  has and yours is missing. Offered as fill-ins.
+- **Details that differ**: a corrected birthday, a new phone number or email, a name spelled
+  differently. Both trees record when each detail was last changed, so it says which side is
+  newer and recommends that one.
+- **Photos**: someone who has a photo there and none here, or a newer one there. (An export of
+  "just the information" only reports these; an export with pictures can bring them over.)
+- **People only in your tree** are listed and left alone.
+
+It writes all of this as an HTML page (`import-preview.html`). You check it, and nothing changes
+until you approve; additions need a clear yes, by name. It never deletes anything.
 
 **Keeping two trees in sync.** Do it again whenever there's news: export "just the information"
 from the other tree, give it to your AI tool, approve what's newer. It works both ways: each side

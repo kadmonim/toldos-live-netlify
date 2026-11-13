@@ -204,10 +204,7 @@ Field notes:
 
 For every person, couple and picture, work out which of these it is:
 
-- **New**: its id is not in the target. But first look for someone in the target who is likely
-  the same person under another id (the trees were built separately): the same names and the same
-  birthday, or the same names and the same parents or spouse. List each such pair in the preview
-  under "Possible duplicates" and ask the owner; never add one of those without a clear yes.
+- **New**: its id is not in the target.
 - **Same**: the id exists and every exported value matches.
 - **Different**: the id exists and some values differ. Compare by group of fields, the way the
   app logs edits: names (\`he_first\`, \`he_full\`, \`en_first\`, \`he_last\`, \`en_last\`,
