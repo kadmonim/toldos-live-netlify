@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7C5CBF" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <!-- The family's name is put into these by the Worker (worker/index.mjs) from server/lib/families.mjs. -->
+  <meta name="apple-mobile-web-app-title" content="Family Tree" />
+  <!-- What a shared link shows (WhatsApp, Facebook, X…). Public, so nothing personal here. -->
+  <meta name="description" content="The whole family in one place: find yourself in the tree, add Hebrew birthdays, anniversaries and photos. כל המשפחה במקום אחד." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Family Tree" />
+  <meta property="og:title" content="Family Tree · עץ המשפחה" />
+  <meta property="og:description" content="The whole family in one place: find yourself in the tree, add Hebrew birthdays, anniversaries and photos. כל המשפחה במקום אחד." />
+  <meta name="twitter:card" content="summary" />
+  <title>Family Tree · עץ המשפחה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Nunito:wght@400;600;700;800&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app"></div>
+  <input type="file" id="photoInput" accept="image/*" hidden />
+  <dialog id="sheet"></dialog>
+  <dialog id="crop"></dialog>
+  <dialog id="zoom"></dialog>
+  <dialog id="login"></dialog>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
