@@ -7,6 +7,10 @@ birthday calendar as PDF. Hebrew and English.
 
 **It's free, and can be used for any non-commercial use** (see [License](#license)).
 
+**The easiest way to set it up: give this page's link to your AI coding tool** (such as
+[Claude Code](https://claude.com/claude-code)) and ask it to set the site up for you. It reads
+these instructions, does the steps, and asks you only for what it needs.
+
 It runs on [Netlify](https://netlify.com): the site, the photos, and the database (Netlify's own,
 or your [Neon](https://neon.tech) database). It starts with an invented family, the Rosenfelds (42 people; nobody in it is real, and their portraits are AI-generated), which you
 replace with your own.
@@ -54,21 +58,19 @@ into it, so make it **private**:
 Your copy is yours: changes you make there stay there. This repository doesn't change it.
 (The family's details themselves are never in the code: they're in the database.)
 
-## The easy way: let Claude Code set it up
+## The easy way: let your AI set it up
 
-You don't need to know how any of this works. Setting this site up is also a good first project
-for getting to know [Claude Code](https://claude.com/claude-code), an AI assistant that works in
-your terminal:
+You don't need to know how any of this works. Give your AI coding tool (Claude Code, or any other)
+the link to this page and say something like:
 
-1. Make [your own copy](#first-your-own-copy) and open its folder in Claude Code.
-2. Say something like:
+> Set up this family tree site for me on Netlify: https://github.com/kadmonim/toldos-live-netlify
 
-   > Read the README and set this site up on my Netlify account, step by step. Tell me what
-   > each step does, and ask me before anything that costs money. Then help me replace the invented
-   > family with my own top couple.
+It makes your own copy, sets up the account side, asks you for the family password and your
+family's top couple, and explains what it's doing as it goes. Ask it anything along the way, or
+later ("add my wife's family", "how do I bring in my cousin's export?"): it's all in this README.
 
-Claude runs the commands below for you, explains them, and stops where it needs you (logging in
-to Netlify, choosing the family password). The rest of this page is the same steps by hand.
+It's also a good first project for getting to know an AI coding tool. The rest of this page is
+the same steps by hand.
 
 ## Try it first (nothing to set up)
 
