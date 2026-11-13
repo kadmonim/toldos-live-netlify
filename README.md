@@ -32,8 +32,10 @@ features and the same demo. They differ only in where it runs and the kind of da
 | Looking at the data | Cloudflare's console and `wrangler` commands | Any Postgres tool; with Neon, its console, branches and point-in-time restore |
 | Changing the tables | Edit and run SQL by hand | Numbered migration files, applied by Netlify on each deploy |
 
-Pick the one whose service you'd rather have an account with. If you already use Netlify, take the
-Netlify version; if you're starting fresh and want one free account for everything, Cloudflare.
+Pick the one whose service you'd rather have an account with. If you already have a Netlify or a
+Cloudflare account, use that one: this is just one more site on it, with no extra fee (on a paid
+Netlify plan, no badge either). Starting fresh and want one free account for everything, with no
+badge: Cloudflare.
 SQLite and Postgres are different databases, so switching versions later means copying the data
 across (an AI assistant can do that with you); choosing well at the start saves that.
 
