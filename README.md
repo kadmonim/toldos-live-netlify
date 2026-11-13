@@ -187,6 +187,48 @@ The family then grows from its site: brothers, sisters, husbands, wives and chil
 in the app. Claude Code can do all of these steps with you: tell it which family to add and who
 connects it to the tree.
 
+## Sharing a branch with another family tree
+
+Families overlap. Your household belongs to your side and to your wife's side, and the other side
+may run its own family tree site (this one or another installation). Rather than typing the same
+people twice, one tree can take a branch from the other, and keep it up to date.
+(When both families are on the same site, as in [More than one family](#more-than-one-family),
+they already share the same records and there's nothing to keep in sync.)
+
+**Exporting a branch.** At the bottom of a married person's page: **Export this branch**. It
+gives one zip with that couple, everyone descended from them, their husbands and wives, and when
+each detail was last changed. You can export your own household, or a couple you or your husband
+or wife descend from; never the top couple, which would be the whole tree. Three sizes:
+
+- **Just the information**: a few KB, no pictures. The one to use for regular updates.
+- **With pictures**: the photos as the site shows them.
+- **With full-quality pictures**: also the originals, for printing.
+
+Exporting is off for everyone until the app admin turns it on for a person (it's their family's
+details, phone numbers included). The link offers to ask the admin on WhatsApp; the admin turns it
+on in the database: `UPDATE people SET can_export = true WHERE id = '<person id>';`
+
+**Bringing it into your tree.** There's no import button: give the zip to your AI coding tool
+(such as Claude Code), opened in your site's folder, and say:
+
+> Follow IMPORT.md in this zip to update my site's database.
+
+The zip's `IMPORT.md` tells it to go carefully. It backs up your database first, compares the
+export with your tree person by person, and writes an HTML page (`import-preview.html`) showing
+who would be added, which details would change, and for each change which side is newer (from
+when each part was last changed on each side). You check it, and nothing changes until you
+approve. Additions need a clear yes, by name. It never deletes anything.
+
+**Keeping two trees in sync.** Do it again whenever there's news: export "just the information"
+from the other tree, give it to your AI tool, approve what's newer. It works both ways: each side
+exports the shared branch and the other takes what's newer. To keep the shared branch in sync
+with one tree only, edit it there and let the other side import.
+
+**Start the second tree from an export.** Everyone keeps the same id in both trees, so later
+updates find each person exactly. Two trees built separately have different ids for the same
+people; the AI then looks for likely matches by name and birthday and asks you about each one,
+which works but takes more care.
+
 ## How it's built
 
 - **The page**: plain JavaScript built with Vite (`src/main.js`; `src/i18n.js` has every text in
