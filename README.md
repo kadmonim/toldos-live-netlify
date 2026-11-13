@@ -17,9 +17,25 @@ the bottom of a page puts it back. The demo's password is only there to show wha
 real site opens with a password you choose and share with your family, checked on the server.
 (Build a demo of your own with `npm run build:demo`: plain files for any static host.)
 
-This repository (`toldos-live-netlify`) is the version for Netlify. The same site for Cloudflare is
-[toldos-live-cloudflare](https://github.com/kadmonim/toldos-live-cloudflare): one free account for
-everything, with no logo on the free plan.
+## Which version?
+
+This is the **Netlify version**. The same site comes in two versions, with the same screens and
+features and the same demo. They differ only in where it runs and the kind of database underneath:
+
+| | [Cloudflare version](https://github.com/kadmonim/toldos-live-cloudflare) | [Netlify version](https://github.com/kadmonim/toldos-live-netlify) |
+|---|---|---|
+| Runs on | Cloudflare (a Worker) | Netlify (Functions) |
+| Database | D1: SQLite, Cloudflare's own | Postgres: Netlify's own database, or your own Neon |
+| Photos | R2 storage | Netlify Blobs |
+| Accounts needed | One (Cloudflare) | Netlify, plus Neon if you choose it |
+| Free plan | No logo on the site | A small Netlify logo on the site |
+| Looking at the data | Cloudflare's console and `wrangler` commands | Any Postgres tool; with Neon, its console, branches and point-in-time restore |
+| Changing the tables | Edit and run SQL by hand | Numbered migration files, applied by Netlify on each deploy |
+
+Pick the one whose service you'd rather have an account with. If you already use Netlify, take the
+Netlify version; if you're starting fresh and want one free account for everything, Cloudflare.
+SQLite and Postgres are different databases, so switching versions later means copying the data
+across (an AI assistant can do that with you); choosing well at the start saves that.
 
 ## The easy way: let Claude Code set it up
 
