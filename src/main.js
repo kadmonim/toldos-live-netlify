@@ -2880,9 +2880,9 @@ function searchResults() {
 // ---------- earlier roots (the wider family) ----------
 
 const hasRoots = () => Boolean(state.roots?.people.length);
-/** Whether the site has the drawn tree (#/chart): where there are earlier roots. Before they've loaded, as it
- *  was on the last visit, so its buttons are there at once. */
-const hasChart = () => (state.roots ? hasRoots() : storeGet('tree.hasRoots') === '1');
+/** Whether the site has the drawn tree (#/chart): always (it draws the tree's own people, and the earlier
+ *  roots above them when there are any), with the list of families as its own tab, "Relatives". */
+const hasChart = () => true;
 let sameOne = new Map();   // the same, but only from groups of one-word spellings (משה / Moses / Mosche): 'משה יוסף' must not tie יוסף to משה
 let same = new Map();   // a spelling -> the spellings that go with it (from the roots' spelling groups)
 let rootsLoading = null;
