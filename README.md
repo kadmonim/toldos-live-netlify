@@ -24,10 +24,36 @@ the bottom of a page puts it back. The demo's password is only there to show wha
 real site opens with a password you choose and share with your family, checked on the server.
 (Build a demo of your own with `npm run build:demo`: plain files for any static host.)
 
+## What's new
+
+**November 21, 2026**
+- **How you're related**: every profile shows how that person is related to you, in every way, drawn
+  as a small tree from the shared ancestor down to both of you.
+- **The family tree, drawn**: a new **Tree** tab draws the family: parents, grandparents and the
+  generations above, descendants below, with zoom and full screen. The list of families is now the
+  **Relatives** tab.
+- **More games**: besides Who's this?, there is Find the Face, Meet a Family, Match Kids & Parents,
+  Sons- & daughters-in-law and a birthday game. Each person's progress is saved, and the games bring
+  back what they got wrong (spaced repetition).
+- **Birthdays in your own calendar**: a calendar link for Google, iPhone or Outlook with the family's
+  birthdays, anniversaries and yahrzeits.
+- **Documents, videos and links on a profile**: PDFs and scans (stored on Cloudflare R2, optional:
+  see [Documents on profiles](#documents-on-profiles)), Vimeo videos and links.
+- **The extended family**: ancestors and cousins beyond the tree, searchable and editable, with
+  photos (see [The extended family](#the-extended-family)).
+- **Tehillim on your profile**: each family member's chapter of Tehillim for the year they are in.
+- **More on each profile**: headstone photo and burial place, הכהן / הלוי, maiden name in Hebrew,
+  and ז"ל after names (also in English).
+- **Nothing is deleted**: what someone removes in the app is archived, so it can be brought back.
+  Photos are also copied every hour to a second store.
+- **Updating an existing site**: just deploy. The new tables and columns are added by the new
+  migrations (`0003` to `0022`).
+
 ## Which version?
 
-This is the **Netlify version**. The same site comes in two versions, with the same screens and
-features and the same demo. They differ only in where it runs and the kind of database underneath:
+This is the **Netlify version**, the one that is kept up to date. The Cloudflare version is the
+first release (November 13, 2026) and is not updated any more: it has none of the features under
+[What's new](#whats-new). A Cloudflare port of the current version is welcome. Where they differ:
 
 | | [Cloudflare version](https://github.com/kadmonim/toldos-live-cloudflare) | [Netlify version](https://github.com/kadmonim/toldos-live-netlify) |
 |---|---|---|
