@@ -94,6 +94,36 @@ export function inYear(entries, hy) {
   return out;
 }
 
+/** Full years since a Hebrew date (with its year) as of today, by the same rules as the birthdays on
+ *  the home page: someone whose birthday this year is still ahead hasn't turned it yet. Null
+ *  without a year. */
+export function yearsSince(day, month, year) {
+  if (!day || !month || !year) return null;
+  const today = new HDate();
+  const hy = today.getFullYear();
+  const orig = new HDate(Math.min(day, HDate.daysInMonth(month, year)), month, year);
+  const occ = HebrewCalendar.getBirthdayOrAnniversary(hy, orig);
+  const n = hy - year - (occ && occ.abs() > today.abs() ? 1 : 0);
+  return n >= 0 ? n : null;
+}
+
+/** Every date of the entries between two civil dates (inclusive), as { entry, date, hd, years }, for
+ *  the calendar feed. Same rules as `upcoming`; nothing in or before the year of the date itself. */
+export function occurrences(entries, from, to) {
+  const out = [];
+  const [y0, y1] = [new HDate(from).getFullYear(), new HDate(to).getFullYear()];
+  for (const e of entries) {
+    if (!e.h_day || !e.h_month) continue;
+    for (let hy = y0; hy <= y1; hy++) {
+      if (e.h_year && hy <= e.h_year) continue;
+      const hd = occurrence(e, hy);
+      const date = hd?.greg();
+      if (date && date >= from && date <= to) out.push({ entry: e, date, hd, years: e.h_year ? hy - e.h_year : null });
+    }
+  }
+  return out.sort((a, b) => a.date - b.date);
+}
+
 /** Entries ({kind, h_day, h_month, h_year, …}) falling in the next `days` days, soonest first, as
  *  { entry, date, hd, days (0 = today), years (null when the year isn't known) }. */
 export function upcoming(entries, days) {

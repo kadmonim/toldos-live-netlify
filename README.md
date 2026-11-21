@@ -2,8 +2,11 @@
 
 A private family site: everyone finds themselves in the tree, then fills in what's missing —
 Hebrew birthdays, photos, city, phone and email, spouse and children. It shows upcoming birthdays,
-anniversaries and yahrzeits, has a "Who's this?" photo quiz, and prints a family book and a
-birthday calendar as PDF. Hebrew and English.
+anniversaries and yahrzeits (also as a calendar feed for Google, iPhone or Outlook), shows how any two
+people are related, draws the family tree, has family games (Who's this?, Find the Face, birthdays,
+whose child, in-laws) that remember what each person knows, keeps documents, videos and links on a
+profile, has an extended family (ancestors and cousins beyond the tree) and each one's chapter of
+Tehillim, and prints a family book and a birthday calendar as PDF. Hebrew and English.
 
 **It's free, and can be used for any non-commercial use** (see [License](#license)).
 
@@ -115,6 +118,9 @@ Netlify's own tool: `npx netlify dev`.
    | `SESSION_SECRET` | Any long random text, e.g. from `openssl rand -base64 32`. Never shared. |
    | `TREE_DATABASE_URL` | Only with Neon: its connection string. |
 
+   Documents on profiles need two more (see [Documents on profiles](#documents-on-profiles)):
+   `FILES_WORKER_URL` and `FILES_SECRET`. Without them, videos and links still work.
+
 5. **Deploys → Trigger deploy.** The site is then live at its `….netlify.app` address.
 
 On Netlify's free plan the site shows a Netlify badge; the Personal plan
@@ -139,6 +145,33 @@ add a domain under **Domain management**. Nothing in the code needs the address.
 - **`complete: true`** in `families.mjs`, once all the top couple's children are in: nobody can
   then be added as their child by mistake.
 - **An Events tab** linking to a family calendar: build with `VITE_CALENDAR_URL` set.
+- **The quiz's games**: `games` in `families.mjs` (remove any you don't want).
+
+## Documents on profiles
+
+A profile can hold documents (a PDF, a scan), Vimeo videos and links. **Videos and links need nothing
+more.** Uploaded files are kept in [Cloudflare R2](https://developers.cloudflare.com/r2/) (free up to
+10 GB), behind a small Worker in `cloudflare/files/`; the browser sends a file straight there, signed
+by the site.
+
+**Don't want to set up Cloudflare?** Add `files: false` to your family's entry in
+`netlify/lib/families.mjs`. The "File" choice then disappears, and videos and links stay.
+
+To set it up (a free Cloudflare account, and `npx wrangler login`):
+1. Create two R2 buckets: `family-tree-files` and `family-tree-files-backup` (an hourly copy of the first).
+2. In `cloudflare/files/worker.js`, put your site's address in `SITES`.
+3. `cd cloudflare/files && npx wrangler deploy`, then `npx wrangler secret put FILES_SECRET` with any long
+   random text.
+4. On Netlify, set `FILES_WORKER_URL` (the Worker's `….workers.dev` address) and `FILES_SECRET` (the same
+   text), and deploy again.
+
+## The extended family
+
+Beyond the tree itself, a site can show its wider family: ancestors, cousins and their families, kept in
+their own tables (`roots_people`, `roots_couples`, `roots_members`; see
+`netlify/database/migrations/0003_roots`). It starts empty. Load it from a GEDCOM file (Geni and
+others export one) with your AI tool: ask it to read these tables and fill them for your family's key.
+After that, the family edits it in the app.
 
 ## Choosing the top couple
 
@@ -290,11 +323,13 @@ which works but takes more care.
   one family password and a signed cookie that lasts 90 days (`netlify/lib/auth.mjs`).
 - **The data**: Postgres, through `netlify/lib/db.mjs`. The tree is built from couples: a
   person's `parents` is the couple they were born to. Tables: `people`, `couples`, `edits` (who
-  filled in what) and `photos` (extra pictures). Each change to the tables is a new numbered
+  filled in what), `photos` (extra pictures), `quiz_progress`, `profile_items` (documents, videos,
+  links) and the extended family's `roots_*`. Each change to the tables is a new numbered
   folder in `netlify/database/migrations/`, numbered above the last one.
 - **Photos and backups**: Netlify Blobs. Photos are shrunk in the browser before upload. Every
   night the whole database is saved as a JSON file (the last 30 are kept); `/api/backups` lists
-  them.
+  them. Every hour new photos are copied to a second store. Nothing removed in the app is deleted:
+  it is archived (the row and the file stay).
 - **Who is who**: after the password, each device says which person in the tree it is. That is
   trusted, not verified — this is built for a family that shares one password.
 

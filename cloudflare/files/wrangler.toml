@@ -1,0 +1,19 @@
+# The Worker in front of the family's documents (see worker.js). Deployed by hand:
+#   cd cloudflare/files && wrangler deploy
+# Its secret (the same value as the site's FILES_SECRET on Netlify): wrangler secret put FILES_SECRET
+name = "family-tree-files"
+main = "worker.js"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "family-tree-files"
+
+[[r2_buckets]]
+binding = "BACKUP"
+bucket_name = "family-tree-files-backup"
+
+# The copy to the second bucket, every hour (worker.js: mirror).
+[triggers]
+crons = ["17 * * * *"]

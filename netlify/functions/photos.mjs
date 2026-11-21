@@ -7,7 +7,8 @@
 import { getStore } from '@netlify/blobs';
 import { sql } from '../lib/db.mjs';
 import { isLoggedIn } from '../lib/auth.mjs';
-import { loadScope } from '../lib/family.mjs';
+import { keepAside } from '../lib/archive.mjs';
+import { loadScope, inKinTree } from '../lib/family.mjs';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -21,10 +22,16 @@ export default async (req, context) => {
   const family = url.pathname.startsWith('/api/family-photos/');
   const original = url.searchParams.get('size') === 'original';
   const key = family ? `couple-${id}` : id;
-  const store = getStore('photos');
+  // Strong: read what was just saved. The default (eventual) could hand back the old picture for up to a minute
+  // after a new one is uploaded, and the browser kept that under the new version's address for good, so a new
+  // profile picture often seemed not to have saved until it was uploaded again.
+  const store = getStore({ name: 'photos', consistency: 'strong' });
   // Only photos of the site's family (lib/family.mjs).
   const scope = await loadScope(req);
-  if (!(family ? scope.couples.has(id) : scope.members.has(id))) return new Response('Not found', { status: 404 });
+  if (!(family ? scope.couples.has(id) : scope.members.has(id))) {
+    // a sister family's person: their picture can be seen here (not changed)
+    if (family || req.method !== 'GET' || original || !(await inKinTree(req, id))) return new Response('Not found', { status: 404 });
+  }
 
   if (req.method === 'GET') {
     const res = (original && await store.getWithMetadata(`orig-${key}`, { type: 'arrayBuffer' }))
@@ -42,6 +49,7 @@ export default async (req, context) => {
     if (data.byteLength > MAX_ORIGINAL) return new Response('Photo too large', { status: 413 });
     const [row] = family ? await sql`SELECT id FROM couples WHERE id = ${id}` : await sql`SELECT id FROM people WHERE id = ${id}`;
     if (!row) return new Response('Not found', { status: 404 });
+    await keepAside(store, `orig-${key}`);   // the one before stays, under archived/
     await store.set(`orig-${key}`, data, { metadata: { type, at: new Date().toISOString() } });
     return Response.json({ ok: true });
   }
@@ -55,6 +63,7 @@ export default async (req, context) => {
       ? await sql`SELECT id, a AS person FROM couples WHERE id = ${id}`
       : await sql`SELECT id, id AS person FROM people WHERE id = ${id}`;
     if (!row) return new Response('Not found', { status: 404 });
+    await keepAside(store, key);   // the one before stays, under archived/
     await store.set(key, data, { metadata: { type } });
     const v = Date.now();
     if (family) await sql`UPDATE couples SET photo_v = ${v} WHERE id = ${id}`;
@@ -65,13 +74,15 @@ export default async (req, context) => {
     return Response.json({ photo_v: v });
   }
 
-  // Removing a photo (e.g. a black shot taken by mistake): both blobs go, and photo_v is cleared so
+  // Removing a photo (e.g. a black shot taken by mistake): both files are moved aside (archived/…, nothing is
+  // deleted for good), and photo_v is cleared so
   // the person shows their initials again and the quiz stops using them.
   if (req.method === 'DELETE') {
     const [row] = family
       ? await sql`UPDATE couples SET photo_v = NULL WHERE id = ${id} RETURNING id`
       : await sql`UPDATE people SET photo_v = NULL, updated_at = now() WHERE id = ${id} RETURNING id`;
     if (!row) return new Response('Not found', { status: 404 });
+    await keepAside(store, key, `orig-${key}`);   // kept under archived/ before leaving their place
     await Promise.all([store.delete(key), store.delete(`orig-${key}`)]);
     return Response.json({ ok: true });
   }

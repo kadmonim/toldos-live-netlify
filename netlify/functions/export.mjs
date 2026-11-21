@@ -84,7 +84,7 @@ export default async (req, context) => {
   const [people, couples, photos, edits] = await Promise.all([
     sql`SELECT * FROM people ORDER BY created_at, id`,
     sql`SELECT * FROM couples ORDER BY id`,
-    sql`SELECT id, person_id, created_at FROM photos ORDER BY created_at, id`,
+    sql`SELECT id, person_id, created_at FROM photos WHERE archived_at IS NULL ORDER BY created_at, id`,
     // An edit that was put back (scripts/undo.mjs) changed the record again when it was undone.
     sql`SELECT person_id, field, max(greatest(at, undone_at)) AS at FROM edits WHERE person_id IS NOT NULL GROUP BY 1, 2`,
   ]);

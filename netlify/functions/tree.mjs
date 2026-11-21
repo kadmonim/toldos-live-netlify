@@ -11,13 +11,13 @@ const json = (body, status = 200) => Response.json(body, { status });
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const uuidOrNull = (v) => (typeof v === 'string' && UUID.test(v) ? v : null);
 
-const TEXT = ['he_first', 'he_full', 'en_first', 'he_last', 'en_last', 'city', 'address', 'phone', 'email', 'hobby', 'occupation', 'maiden', 'father_name', 'mother_name'];
+const TEXT = ['he_first', 'he_full', 'en_first', 'he_last', 'en_last', 'city', 'address', 'phone', 'email', 'hobby', 'occupation', 'maiden', 'maiden_he', 'father_name', 'mother_name', 'mother_he', 'burial'];
 // Changed columns are logged as one edit per group.
 const GROUPS = {
-  names: ['he_first', 'he_full', 'en_first', 'he_last', 'en_last', 'maiden', 'father_name', 'mother_name'],
+  names: ['he_first', 'he_full', 'en_first', 'he_last', 'en_last', 'tribe', 'maiden', 'maiden_he', 'father_name', 'mother_name', 'mother_he'],
   birthday: ['h_day', 'h_month', 'h_year'],
   yahrzeit: ['d_day', 'd_month', 'd_year'],
-  city: ['city'], address: ['address'], phone: ['phone'], email: ['email'], hobby: ['hobby'], occupation: ['occupation'], parents: ['parents'],
+  city: ['city'], address: ['address'], phone: ['phone'], email: ['email'], hobby: ['hobby'], occupation: ['occupation'], burial: ['burial'], parents: ['parents'], grade: ['grade_offset'], tehillim: ['tehillim'],
 };
 
 // hebcal's month numbers, plus 14 = plain Adar for a date without a year (see src/hebrew.js).
@@ -27,7 +27,7 @@ const realMonth = (m, y) => (m === 14 && y ? (isLeap(y) ? 13 : 12) : m);
 function clean(body) {
   const p = {};
   // The full mailing address (for invitations) is longer than the rest; `city` stays the short form.
-  for (const k of TEXT) p[k] = String(body[k] ?? '').trim().slice(0, k === 'address' ? 250 : 120) || null;
+  for (const k of TEXT) p[k] = String(body[k] ?? '').trim().slice(0, k === 'address' || k === 'burial' ? 250 : 120) || null;
   p.he_full ??= p.he_first;   // the full Hebrew name starts out as the everyday one
   const int = (v, lo, hi) => (Number.isInteger(v) && v >= lo && v <= hi ? v : null);
   p.h_day = int(body.h_day, 1, 30);
@@ -44,7 +44,13 @@ function clean(body) {
   if (!p.d_day || !p.d_month) p.d_day = p.d_month = null;
   p.deceased = Boolean(body.deceased);
   p.sex = body.sex === 'm' || body.sex === 'f' ? body.sex : null;
+  p.tribe = body.tribe === 'levi' || body.tribe === 'kohen' ? body.tribe : null;   // הלוי / הכהן
   p.parents = uuidOrNull(body.parents);
+  // A child's grade, moved once from the one worked out from the birthday (0 = as worked out).
+  p.grade_offset = int(body.grade_offset, -3, 3) || null;
+  // Their tehillim page's settings (only what's known is kept).
+  const th = body.tehillim && typeof body.tehillim === 'object' ? Object.fromEntries(['rebbe', 'parents', 'siblings', 'grandkids'].filter((k) => body.tehillim[k] === true).map((k) => [k, true])) : {};
+  p.tehillim = Object.keys(th).length ? th : null;
   return p.he_first || p.en_first ? p : null;
 }
 
@@ -78,15 +84,15 @@ export default async (req, context) => {
 
   if (req.method === 'GET' && url.pathname === '/api/tree') {
     const [people, couples, edits, recent, photos] = await Promise.all([
-      sql`SELECT id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, deceased, parents, photo_v, birth_order,
-                  maiden, father_name, mother_name, nickname, d_day, d_month, d_year, created_at, sex, archived_at FROM people ORDER BY created_at`,
+      sql`SELECT id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, burial, grade_offset, tehillim, deceased, parents, photo_v, birth_order,
+                  maiden, maiden_he, tribe, father_name, mother_name, mother_he, nickname, d_day, d_month, d_year, created_at, sex, archived_at FROM people ORDER BY created_at`,
       sql`SELECT id, a, b, is_root AS root, w_day, w_month, w_year, photo_v, apart, engaged, venue FROM couples`,
       sql`SELECT by_person AS by, field, count(*)::int AS n FROM edits WHERE by_person IS NOT NULL AND undone_at IS NULL GROUP BY 1, 2`,
       // The latest activity, for the home screen's "What's new": recent edits of every family, so this
       // family's 40 latest can be picked out below (busy days on one site mustn't crowd out another's).
       sql`SELECT by_person AS by, person_id AS person, field, at FROM edits WHERE undone_at IS NULL ORDER BY at DESC LIMIT 3000`,
       // Everyone's extra pictures (see gallery.mjs).
-      sql`SELECT id, person_id AS person, created_at AS at FROM photos ORDER BY created_at`,
+      sql`SELECT id, person_id AS person, created_at AS at, kind FROM photos WHERE archived_at IS NULL ORDER BY created_at`,
     ]);
     // The page treats this family's top couple as "the root" (it only ever sees one family).
     const root = rootOf(req, couples);
@@ -126,12 +132,13 @@ export default async (req, context) => {
     // Removing a person: only someone nobody else depends on (no spouse, no children, no extra
     // pictures), which is what an accidental duplicate looks like. Their own profile photo goes too.
     if (req.method === 'DELETE' && id) {
-      const [r] = await sql`DELETE FROM people WHERE id = ${id}
+      // Archived, never deleted: the person leaves the tree, the row and their picture stay.
+      const [r] = await sql`UPDATE people SET archived_at = now(), archived_by = ${by}, updated_at = now() WHERE id = ${id}
                             AND NOT EXISTS (SELECT 1 FROM couples WHERE a = ${id} OR b = ${id})
-                            AND NOT EXISTS (SELECT 1 FROM photos WHERE person_id = ${id})
-                            RETURNING id, photo_v`;
+                            AND NOT EXISTS (SELECT 1 FROM photos WHERE person_id = ${id} AND archived_at IS NULL)
+                            RETURNING id`;
       if (!r) return json({ error: 'not found, or not a person without spouse, children or gallery pictures' }, 404);
-      if (r.photo_v) { const store = getStore('photos'); await Promise.all([store.delete(id), store.delete(`orig-${id}`)]); }
+      await log(by, id, ['archived']);
       return json({ ok: true });
     }
     const body = await req.json().catch(() => ({}));
@@ -144,14 +151,14 @@ export default async (req, context) => {
       // instead of adding them twice.
       const newId = uuidOrNull(body.id) ?? crypto.randomUUID();
       const [r] = await sql`INSERT INTO people (id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, sex,
-                                                city, address, phone, email, hobby, occupation, maiden, father_name, mother_name, deceased, parents)
+                                                city, address, phone, email, hobby, occupation, maiden, maiden_he, tribe, father_name, mother_name, mother_he, deceased, parents)
                             VALUES (${newId}, ${p.he_first}, ${p.he_full}, ${p.en_first}, ${p.he_last}, ${p.en_last}, ${p.h_day}, ${p.h_month},
-                                    ${p.h_year}, ${p.sex}, ${p.city}, ${p.address}, ${p.phone}, ${p.email}, ${p.hobby}, ${p.occupation}, ${p.maiden}, ${p.father_name}, ${p.mother_name}, ${p.deceased}, ${p.parents})
+                                    ${p.h_year}, ${p.sex}, ${p.city}, ${p.address}, ${p.phone}, ${p.email}, ${p.hobby}, ${p.occupation}, ${p.maiden}, ${p.maiden_he}, ${p.tribe}, ${p.father_name}, ${p.mother_name}, ${p.mother_he}, ${p.deceased}, ${p.parents})
                             ON CONFLICT (id) DO NOTHING
-                            RETURNING id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, maiden, father_name, mother_name, deceased, d_day, d_month, d_year, parents, photo_v, birth_order, sex`;
+                            RETURNING id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, maiden, maiden_he, tribe, father_name, mother_name, mother_he, deceased, d_day, d_month, d_year, parents, photo_v, birth_order, sex`;
       if (!r) {
         if (!reachable(newId)) return json({ error: 'not found' }, 404);
-        const [existing] = await sql`SELECT id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, maiden, father_name, mother_name, deceased, d_day, d_month, d_year, parents, photo_v, birth_order, sex FROM people WHERE id = ${newId}`;
+        const [existing] = await sql`SELECT id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, maiden, maiden_he, tribe, father_name, mother_name, mother_he, deceased, d_day, d_month, d_year, parents, photo_v, birth_order, sex FROM people WHERE id = ${newId}`;
         return json(view(scope, existing));
       }
       // Someone adding themselves has no id yet: count it as their own edit.
@@ -159,20 +166,20 @@ export default async (req, context) => {
       return json(r, 201);
     }
     if (req.method === 'PUT' && id) {
-      const [old] = await sql`SELECT id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, maiden, father_name, mother_name, deceased, d_day, d_month, d_year, parents, photo_v, birth_order FROM people WHERE id = ${id}`;
+      const [old] = await sql`SELECT id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, burial, grade_offset, tehillim, maiden, maiden_he, tribe, father_name, mother_name, mother_he, deceased, d_day, d_month, d_year, parents, photo_v, birth_order FROM people WHERE id = ${id}`;
       if (!old) return json({ error: 'not found' }, 404);
       // The page doesn't know a married-in person's parents (another family's couple), so it sends
       // none: keep the link instead of clearing it.
       if (!p.parents && old.parents && !scope.couples.has(old.parents)) p.parents = old.parents;
       // A page from before these fields existed doesn't send them: keep what's stored.
-      for (const k of ['maiden', 'father_name', 'mother_name', 'occupation', 'address', 'd_day', 'd_month', 'd_year']) if (!(k in body)) p[k] = old[k];
+      for (const k of ['maiden', 'maiden_he', 'tribe', 'father_name', 'mother_name', 'occupation', 'address', 'burial', 'grade_offset', 'mother_he', 'tehillim', 'd_day', 'd_month', 'd_year']) if (!(k in body)) p[k] = old[k];
       const [r] = await sql`UPDATE people SET he_first = ${p.he_first}, he_full = ${p.he_full}, en_first = ${p.en_first}, he_last = ${p.he_last},
                                    en_last = ${p.en_last}, h_day = ${p.h_day}, h_month = ${p.h_month}, h_year = ${p.h_year}, birth_order = ${p.birth_order},
-                                   city = ${p.city}, address = ${p.address}, phone = ${p.phone}, email = ${p.email}, hobby = ${p.hobby}, occupation = ${p.occupation},
-                                   maiden = ${p.maiden}, father_name = ${p.father_name}, mother_name = ${p.mother_name}, deceased = ${p.deceased}, d_day = ${p.d_day}, d_month = ${p.d_month}, d_year = ${p.d_year}, sex = ${p.sex},
+                                   city = ${p.city}, address = ${p.address}, phone = ${p.phone}, email = ${p.email}, hobby = ${p.hobby}, occupation = ${p.occupation}, burial = ${p.burial}, grade_offset = ${p.grade_offset}, tehillim = ${p.tehillim ? JSON.stringify(p.tehillim) : null}::jsonb,
+                                   maiden = ${p.maiden}, maiden_he = ${p.maiden_he}, tribe = ${p.tribe}, father_name = ${p.father_name}, mother_name = ${p.mother_name}, mother_he = ${p.mother_he}, deceased = ${p.deceased}, d_day = ${p.d_day}, d_month = ${p.d_month}, d_year = ${p.d_year}, sex = ${p.sex},
                                    parents = ${p.parents}, updated_at = now()
-                            WHERE id = ${id} RETURNING id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, maiden, father_name, mother_name, deceased, d_day, d_month, d_year, parents, photo_v, birth_order, sex`;
-      await log(by, id, Object.keys(GROUPS).filter((g) => GROUPS[g].some((k) => (old[k] ?? null) !== (r[k] ?? null))), old, r);
+                            WHERE id = ${id} RETURNING id, he_first, he_full, en_first, he_last, en_last, h_day, h_month, h_year, city, address, phone, email, hobby, occupation, burial, grade_offset, tehillim, maiden, maiden_he, tribe, father_name, mother_name, mother_he, deceased, d_day, d_month, d_year, parents, photo_v, birth_order, sex`;
+      await log(by, id, Object.keys(GROUPS).filter((g) => GROUPS[g].some((k) => JSON.stringify(old[k] ?? null) !== JSON.stringify(r[k] ?? null))), old, r);
       return json(view(scope, r));
     }
   }
