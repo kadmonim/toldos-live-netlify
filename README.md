@@ -65,10 +65,9 @@ first release (November 13, 2026) and is not updated any more: it has none of th
 | Looking at the data | Cloudflare's console and `wrangler` commands | Any Postgres tool; with Neon, its console, branches and point-in-time restore |
 | Changing the tables | Edit and run SQL by hand | Numbered migration files, applied by Netlify on each deploy |
 
-Pick the one whose service you'd rather have an account with. If you already have a Netlify or a
-Cloudflare account, use that one: this is just one more site on it, with no extra fee (on a paid
-Netlify plan, no badge either). Starting fresh and want one free account for everything, with no
-badge: Cloudflare.
+**Right now the Netlify version is the better choice**: it is the one being maintained, and it has
+more features. The Cloudflare version still works, and has its own advantages (one free account for
+everything, no badge), but it stays as it was at its first release.
 SQLite and Postgres are different databases, so switching versions later means copying the data
 across (an AI assistant can do that with you); choosing well at the start saves that.
 
